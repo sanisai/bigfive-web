@@ -10,6 +10,10 @@ const transformer_1 = require("./transformer");
 const ocean_assessment_1 = require("./prompts/ocean-assessment");
 const content_validator_1 = require("./content-validator");
 const crypto_1 = __importDefault(require("crypto"));
+// gpt-4-turbo-preview was removed by OpenAI ("model does not exist"), which broke
+// every /api/analyze call. Env-configurable so the next deprecation is an env
+// change on Railway, not a code fix.
+const OPENAI_MODEL = process.env.OPENAI_MODEL || 'gpt-4o';
 class TranscriptAnalyzer {
     constructor(apiKey) {
         this.openai = new openai_1.default({ apiKey });
@@ -27,7 +31,7 @@ class TranscriptAnalyzer {
         const seed = parseInt(transcriptHash.substring(0, 8), 16) % 1000000;
         try {
             const response = await this.openai.chat.completions.create({
-                model: 'gpt-4-turbo-preview',
+                model: OPENAI_MODEL,
                 temperature: 0.1, // Very low temperature for consistency (was 0.3)
                 response_format: { type: 'json_object' },
                 seed: seed, // Deterministic seed based on content hash
@@ -62,7 +66,7 @@ class TranscriptAnalyzer {
                 confidence: gptOutput.confidence,
                 reasoning: gptOutput.reasoning,
                 metadata: {
-                    model: 'gpt-4-turbo-preview',
+                    model: OPENAI_MODEL,
                     timestamp: new Date(),
                     transcriptLength: input.text.length,
                     tokensUsed: response.usage?.total_tokens || 0,

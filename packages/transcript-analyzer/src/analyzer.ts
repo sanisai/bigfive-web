@@ -5,6 +5,11 @@ import { OCEAN_SYSTEM_PROMPT, buildTranscriptAnalysisPrompt } from './prompts/oc
 import { assessContentQuality, shouldProceedWithAnalysis, getQualityScore } from './content-validator'
 import crypto from 'crypto'
 
+// gpt-4-turbo-preview was removed by OpenAI ("model does not exist"), which broke
+// every /api/analyze call. Env-configurable so the next deprecation is an env
+// change on Railway, not a code fix.
+const OPENAI_MODEL = process.env.OPENAI_MODEL || 'gpt-4o'
+
 export class TranscriptAnalyzer {
   private openai: OpenAI
 
@@ -29,7 +34,7 @@ export class TranscriptAnalyzer {
 
     try {
       const response = await this.openai.chat.completions.create({
-        model: 'gpt-4-turbo-preview',
+        model: OPENAI_MODEL,
         temperature: 0.1, // Very low temperature for consistency (was 0.3)
         response_format: { type: 'json_object' },
         seed: seed, // Deterministic seed based on content hash
@@ -70,7 +75,7 @@ export class TranscriptAnalyzer {
         confidence: gptOutput.confidence,
         reasoning: gptOutput.reasoning,
         metadata: {
-          model: 'gpt-4-turbo-preview',
+          model: OPENAI_MODEL,
           timestamp: new Date(),
           transcriptLength: input.text.length,
           tokensUsed: response.usage?.total_tokens || 0,
