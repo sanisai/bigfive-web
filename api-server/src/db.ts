@@ -85,6 +85,56 @@ export async function saveAnalysis(input: SaveAnalysisInput): Promise<string> {
   return result.insertedId.toString()
 }
 
+// ---------------------------------------------------------------------------
+// Combined four-framework assessment persistence (ADDITIVE — saveAnalysis and
+// the existing document shapes are untouched).
+//
+// Deliberate difference from saveAnalysis: the combined document stores the
+// assessment RESULT only — never the transcript text (byall port-doc decision 4;
+// the caller keeps its own transcript copy).
+
+interface SaveCombinedAnalysisInput {
+  language?: string
+  jobRole?: string
+  candidateName?: string
+  transcriptLength: number
+  confidence: number
+  contentQuality: string
+  frameworks: Record<string, any>
+  analysisMetadata?: Record<string, any>
+  metadata?: Record<string, any>
+}
+
+export async function saveCombinedAnalysis(input: SaveCombinedAnalysisInput): Promise<string> {
+  const db = await connectToDatabase()
+  const collection = db.collection(process.env.DB_COLLECTION || 'results')
+
+  const document = {
+    dateStamp: Date.now(),
+    lang: input.language || 'en',
+    type: 'combined',
+
+    // Transcript INFO only — no transcript text is persisted.
+    transcriptInfo: {
+      length: input.transcriptLength,
+      jobRole: input.jobRole,
+      candidateName: input.candidateName
+    },
+
+    combined: {
+      confidence: input.confidence,
+      contentQuality: input.contentQuality,
+      frameworks: input.frameworks,
+      metadata: input.analysisMetadata || {}
+    },
+
+    metadata: input.metadata || {}
+  }
+
+  const result = await collection.insertOne(document)
+  return result.insertedId.toString()
+}
+
 interface GetAnalysisOptions {
   includeEvidence?: boolean
   includeTranscript?: boolean
@@ -101,6 +151,23 @@ export async function getAnalysisById(
 
   if (!document) {
     return null
+  }
+
+  // Combined four-framework documents have their own shape (no answers array).
+  // ADDITIVE branch: only 'combined'-type documents (new) take this path;
+  // every pre-existing document type flows through the original code below.
+  if (document.type === 'combined') {
+    return {
+      id: document._id.toString(),
+      timestamp: document.dateStamp,
+      language: document.lang,
+      type: 'combined',
+      confidence: document.combined?.confidence,
+      contentQuality: document.combined?.contentQuality,
+      frameworks: document.combined?.frameworks,
+      analysisMetadata: document.combined?.metadata,
+      transcriptInfo: document.transcriptInfo
+    }
   }
 
   // Build response based on options

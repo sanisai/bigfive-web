@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getQualityScore = exports.shouldProceedWithAnalysis = exports.assessContentQuality = exports.FACET_NAMES = exports.TranscriptAnalyzer = exports.analyzeTranscript = void 0;
+exports.buildCombinedAnalysisPrompt = exports.COMBINED_SYSTEM_PROMPT = exports.validateCombinedOutput = exports.findVerbatimEvidence = exports.scrubSpiralEmployerView = exports.SPIRAL_COLOR_PATTERN = exports.TranscriptQualityError = exports.analyzeCombinedTranscript = exports.CombinedAnalyzer = exports.getQualityScore = exports.shouldProceedWithAnalysis = exports.assessContentQuality = exports.FACET_NAMES = exports.TranscriptAnalyzer = exports.analyzeTranscript = void 0;
 var analyzer_1 = require("./analyzer");
 Object.defineProperty(exports, "analyzeTranscript", { enumerable: true, get: function () { return analyzer_1.analyzeTranscript; } });
 Object.defineProperty(exports, "TranscriptAnalyzer", { enumerable: true, get: function () { return analyzer_1.TranscriptAnalyzer; } });
@@ -10,3 +10,15 @@ var content_validator_1 = require("./content-validator");
 Object.defineProperty(exports, "assessContentQuality", { enumerable: true, get: function () { return content_validator_1.assessContentQuality; } });
 Object.defineProperty(exports, "shouldProceedWithAnalysis", { enumerable: true, get: function () { return content_validator_1.shouldProceedWithAnalysis; } });
 Object.defineProperty(exports, "getQualityScore", { enumerable: true, get: function () { return content_validator_1.getQualityScore; } });
+// Combined four-framework assessment (additive — OCEAN-only API above is unchanged)
+var combined_analyzer_1 = require("./combined-analyzer");
+Object.defineProperty(exports, "CombinedAnalyzer", { enumerable: true, get: function () { return combined_analyzer_1.CombinedAnalyzer; } });
+Object.defineProperty(exports, "analyzeCombinedTranscript", { enumerable: true, get: function () { return combined_analyzer_1.analyzeCombinedTranscript; } });
+Object.defineProperty(exports, "TranscriptQualityError", { enumerable: true, get: function () { return combined_analyzer_1.TranscriptQualityError; } });
+Object.defineProperty(exports, "SPIRAL_COLOR_PATTERN", { enumerable: true, get: function () { return combined_analyzer_1.SPIRAL_COLOR_PATTERN; } });
+Object.defineProperty(exports, "scrubSpiralEmployerView", { enumerable: true, get: function () { return combined_analyzer_1.scrubSpiralEmployerView; } });
+Object.defineProperty(exports, "findVerbatimEvidence", { enumerable: true, get: function () { return combined_analyzer_1.findVerbatimEvidence; } });
+Object.defineProperty(exports, "validateCombinedOutput", { enumerable: true, get: function () { return combined_analyzer_1.validateCombinedOutput; } });
+var combined_assessment_1 = require("./prompts/combined-assessment");
+Object.defineProperty(exports, "COMBINED_SYSTEM_PROMPT", { enumerable: true, get: function () { return combined_assessment_1.COMBINED_SYSTEM_PROMPT; } });
+Object.defineProperty(exports, "buildCombinedAnalysisPrompt", { enumerable: true, get: function () { return combined_assessment_1.buildCombinedAnalysisPrompt; } });

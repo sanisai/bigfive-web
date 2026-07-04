@@ -320,6 +320,129 @@ GET /api/results/507f1f77bcf86cd799439011?includeEvidence=true
 
 ---
 
+### 5. Combined Four-Framework Analysis
+
+Analyze a transcript across **four** frameworks in one GPT call: Big Five (OCEAN),
+Self-Determination Theory (SDT), Job Demands-Resources (JD-R), and Spiral Dynamics.
+Additive endpoint — `/api/analyze` is unchanged. Same authentication and rate limits
+as `/api/analyze`. Deterministic: temperature 0.1 + content-hash seed.
+
+Each framework returns a `profile` (full internal data for matching) and an
+`employer_view` (3-6 short plain-language strings safe to show an employer).
+
+**Privacy rule:** Spiral Dynamics vMEME color labels (Blue/Orange/Green/Yellow/…)
+appear **only** inside `spiral.profile`. `spiral.employer_view` is validated
+server-side — the model is retried once on a violation, and any string still
+containing a color label is stripped before the response is sent or stored.
+
+**Persistence:** only the assessment **result** is stored (retrievable via
+`GET /api/results/:id`). The transcript text is **not** persisted for this
+endpoint — only its length.
+
+**Request:**
+```http
+POST /api/analyze-combined
+Content-Type: application/json
+X-API-Key: your-key (optional, same as /api/analyze)
+```
+
+**Request Body:**
+```json
+{
+  "transcript": "string (required, min 100 chars; must also pass the 100-word quality gate)",
+  "candidateName": "string (optional)",
+  "jobRole": "string (optional)",
+  "language": "string (optional, default 'en')",
+  "metadata": { "customField": "any (optional)" }
+}
+```
+
+**Success Response:** `200 OK`
+```json
+{
+  "id": "65a4f8b2c3d4e5f6a7b8c9d0",
+  "confidence": 0.78,
+  "contentQuality": "good",
+  "frameworks": {
+    "ocean": {
+      "profile": {
+        "O": {
+          "score": 22,
+          "average": 3.67,
+          "level": "high",
+          "reasoning": "Shows consistent curiosity and abstract thinking.",
+          "evidence": ["I genuinely enjoy learning new technologies"]
+        },
+        "C": { "score": 24, "average": 4.0, "level": "high", "reasoning": "...", "evidence": ["..."] },
+        "E": { "score": 17, "average": 2.83, "level": "neutral", "reasoning": "...", "evidence": ["..."] },
+        "A": { "score": 21, "average": 3.5, "level": "neutral", "reasoning": "...", "evidence": ["..."] },
+        "N": { "score": 14, "average": 2.33, "level": "low", "reasoning": "...", "evidence": ["..."] }
+      },
+      "employer_view": ["Organized and detail-oriented", "Curious and eager to learn"]
+    },
+    "sdt": {
+      "profile": {
+        "autonomy": { "score": 70, "level": "high" },
+        "competence": { "score": 82, "level": "high" },
+        "relatedness": { "score": 55, "level": "moderate" },
+        "dominant_drivers": ["competence", "autonomy"]
+      },
+      "employer_view": ["Motivated by mastery and growth", "Works well independently"]
+    },
+    "jdr": {
+      "profile": {
+        "demands": { "score": 68, "level": "high" },
+        "resources": { "score": 74, "level": "high" },
+        "sustainability": "Sustainable in collaborative environments with variety."
+      },
+      "employer_view": ["Energized by collaborative problem solving", "Repetitive tasks drain energy"]
+    },
+    "spiral": {
+      "profile": {
+        "structure_oriented": 45,
+        "achievement_oriented": 72,
+        "people_oriented": 60,
+        "systems_oriented": 50,
+        "dominant_orientation": "achievement_oriented",
+        "secondary_orientation": "people_oriented",
+        "communication_style": "Data-driven discussions with collaborative decisions",
+        "culture_fit_indicators": ["thrives in meritocratic environments"],
+        "internal_tags": ["orange_primary", "green_secondary"],
+        "summary": "Results-driven with a collaborative streak."
+      },
+      "employer_view": ["Driven by results and efficiency", "Prioritizes team collaboration"]
+    }
+  }
+}
+```
+
+**Field notes:**
+- `ocean.profile.<domain>.score` — sum of six 1-5 facet scores (range 6-30); `average` — score/6 (range 1-5); `level` — `low` (< 2.5 avg) / `neutral` / `high` (> 3.5 avg)
+- `ocean.profile.<domain>.evidence` — **verbatim transcript substrings** (validated server-side; the model is retried once on a violation, non-verbatim leftovers are dropped)
+- `sdt` / `jdr` scores are 0-100; `level` is `low` (≤ 35) / `moderate` / `high` (≥ 65)
+- `spiral.profile` is internal-only matching data — do not display it to employers
+
+**Error Responses:**
+
+`400 Bad Request` - Validation error (short transcript or failed quality gate)
+```json
+{
+  "error": "Validation error",
+  "details": [{ "message": "Transcript must be at least 100 characters" }]
+}
+```
+
+`429 Too Many Requests` - Rate limit exceeded (same limiter as all endpoints)
+
+`500 Internal Server Error` - Analysis failed
+```json
+{
+  "error": "Failed to analyze transcript (combined): ..."
+}
+```
+
+---
+
 ## Rate Limiting
 
 Default limits:
@@ -611,6 +734,12 @@ Official SDKs coming:
 ---
 
 ## Changelog
+
+### v1.1.0 (2026-07-04)
+- Added `POST /api/analyze-combined` — four-framework assessment (OCEAN + SDT + JD-R + Spiral Dynamics) in a single GPT call, with per-framework `profile` / `employer_view` split
+- Server-side contract enforcement: verbatim OCEAN evidence substrings and a Spiral color-label scrub on `employer_view` (retry once, then sanitize)
+- Combined results stored transcript-free (result only) and retrievable via `GET /api/results/:id`
+- Existing endpoints (`/api/analyze`, `/api/analyze/validate`, `/api/results/:id`), auth, and rate limits unchanged
 
 ### v1.0.0 (2024-01-15)
 - Initial API release

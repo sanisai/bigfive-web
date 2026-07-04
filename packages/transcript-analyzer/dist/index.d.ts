@@ -3,3 +3,6 @@ export type { TranscriptInput, OceanAnalysis, Evidence, Scores, DomainScore, Fac
 export { FACET_NAMES } from './prompts/ocean-assessment';
 export { assessContentQuality, shouldProceedWithAnalysis, getQualityScore } from './content-validator';
 export type { ContentQualityMetrics } from './content-validator';
+export { CombinedAnalyzer, analyzeCombinedTranscript, TranscriptQualityError, SPIRAL_COLOR_PATTERN, scrubSpiralEmployerView, findVerbatimEvidence, validateCombinedOutput } from './combined-analyzer';
+export type { CombinedTranscriptInput, CombinedAnalysis, CombinedFrameworks, CombinedAnalysisMetadata, CombinedGPTRawOutput, ChatCompletionsClient, OceanDomainProfile, OceanDomainKey, ScoreLevel } from './combined-types';
+export { COMBINED_SYSTEM_PROMPT, buildCombinedAnalysisPrompt } from './prompts/combined-assessment';

@@ -4,6 +4,7 @@ import helmet from 'helmet'
 import rateLimit from 'express-rate-limit'
 import dotenv from 'dotenv'
 import { analyzeRouter } from './routes/analyze'
+import { analyzeCombinedRouter } from './routes/analyze-combined'
 import { resultsRouter } from './routes/results'
 import { healthRouter } from './routes/health'
 import { optionalApiKey, AuthRequest } from './middleware/auth'
@@ -49,6 +50,7 @@ app.use(express.json({ limit: '10mb' }))
 // Routes
 app.use('/health', healthRouter)
 app.use('/api/analyze', analyzeRouter)
+app.use('/api/analyze-combined', analyzeCombinedRouter)
 app.use('/api/results', resultsRouter)
 
 // Root endpoint
@@ -69,6 +71,7 @@ app.get('/', (req, res) => {
     endpoints: {
       health: '/health',
       analyze: 'POST /api/analyze',
+      analyzeCombined: 'POST /api/analyze-combined',
       results: 'GET /api/results/:id',
       docs: '/api/docs'
     },
